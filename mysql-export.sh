@@ -132,10 +132,11 @@ fi
 
 MKTEMP=/bin/tempfile
 if [ ! -x $MKTEMP ]; then
-    MKTEMP=/usr/bin/mktemp
+    MKTEMP=`which mktemp`
+    result=$($MKTEMP "$TMP_FOLDER/phpmyadmin_export.XXXXXX.tmp")
+else
+    result=$($MKTEMP "$TMP_FOLDER/phpmyadmin_export.$RANDOM.tmp")
 fi
-
-result=$($MKTEMP "$TMP_FOLDER/phpmyadmin_export.$RANDOM.tmp")
 
 apache_auth_params="--anyauth -u$APACHE_USER:$APACHE_PASSWD"
 
@@ -278,7 +279,7 @@ else
 	grep -q "Content-Disposition: attachment" $TMP_FOLDER/curl.headers
 	if [ $? -eq 0 ]
 	then
-		filename="$(echo $remote_host | sed 's/\./-/g')_${database}_$(date  +%Y%m%d%H%M).sql"
+		filename="$(echo $REMOTE_HOST | sed 's/\./-/g; s|^http[s]://||g; s|/|-|g;')_${DATABASE}_$(date  +%Y%m%d%H%M).sql"
 
 		if [ "$COMPRESSION" = "on" ]
     		then
@@ -294,7 +295,7 @@ else
 fi
 
 # remove the old backups and keep the 10 younger ones.
-#ls -1 backup_mysql_*${database}_*.gz | sort -u | head -n-10 | xargs -r rm -v
+#ls -1 backup_mysql_*${DATABASE}_*.gz | sort -u | head -n-10 | xargs -r rm -v
 rm -f $result
 rm -f $TMP_FOLDER/curl.headers
 rm -f $TMP_FOLDER/cookies.txt
